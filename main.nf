@@ -115,12 +115,13 @@ process align_reads {
         path reference
         tuple val(sample_id), path(fastq_reads)
     output:
-        tuple val(sample_id), path("${sample_id}.sam"), emit: sam
+        tuple val(sample_id), path("${sample_id}.bam"), path("${sample_id}.bam.bai"), emit: bam
         tuple val(sample_id), path("${sample_id}_fastq_pass.bed"), emit: bed
     script:
     """
-    minimap2 -t $params.threads -m 4 -ax map-ont $index $fastq_reads > ${sample_id}.sam
-    bedtools bamtobed -i ${sample_id}.sam | bedtools sort > ${sample_id}_fastq_pass.bed
+    minimap2 -t $params.threads -m 4 -ax map-ont $index $fastq_reads | samtools sort -o ${sample_id}.bam -O BAM -
+    samtools index ${sample_id}.bam
+    bedtools bamtobed -i ${sample_id}.bam | bedtools sort > ${sample_id}_fastq_pass.bed
     """
 }
 
@@ -457,6 +458,7 @@ workflow pipeline {
              .concat(summariseReads.out.stats)
              .map {it -> it[1]} // Remove sample id from tuples
              .concat(makeReport.out.report)
+             .concat(align_reads.out.bam.map {it -> [ it[1], it[2] ]})
 
     emit:
         results
