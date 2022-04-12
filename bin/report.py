@@ -296,8 +296,18 @@ def plot_tiled_coverage_hist(report: WFReport, background: List[Path],
 
         len_bg = len(dfb['#reads'].values)
         len_target = len(tc['coverage'])
-        weights = [[1 / len_bg] * len_bg,
-                   [1 / len_target] * len_target]
+
+        # Handle cases where the target sequencing experiment fails. i.e.: no coverage on
+        # the target interval.
+        if len_target != 0:
+            target_weight = [1 / len_target] * len_target
+        else:
+            target_weight = 0
+
+        weights = [
+            [1 / len_bg] * len_bg,
+            target_weight,
+        ]
 
         plot = hist.histogram(
             [dfb['#reads'].values, tc['coverage']],
