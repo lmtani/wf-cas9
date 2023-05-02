@@ -16,3 +16,4 @@ dependencies:
     - minimap2
     - seqkit
     - bokeh==2.4.3
+    - pandas==1.5.3
